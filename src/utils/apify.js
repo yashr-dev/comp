@@ -3,7 +3,7 @@
 // Actors used:
 //   Instagram: apify/instagram-scraper (profile + posts in one run)
 //   Facebook:  apify/facebook-posts-scraper (posts with reactions) + apify/facebook-pages-scraper (profile)
-//   LinkedIn:  curious_coder/linkedin-scraper (company profile + posts)
+//   LinkedIn:  apimaestro/linkedin-company-posts (company posts, no cookies needed)
 
 const APIFY_TOKEN = import.meta.env.VITE_APIFY_TOKEN;
 const APIFY_BASE = '/api/apify/v2';
@@ -269,42 +269,59 @@ export async function fetchFacebookPosts(url) {
 }
 
 // ─── LINKEDIN ───────────────────────────────────────────────
-// Uses curious_coder/linkedin-scraper for company data (no login required)
+// Uses apimaestro/linkedin-company-posts for company posts (no login/cookies required)
+// Note: This actor returns POSTS with engagement data only.
+//       Company profile metadata (followers, employee count) is not available without cookies.
 
 export async function fetchLinkedInCompany(url) {
   try {
-    const items = await runActorAsync('curious_coder~linkedin-scraper', {
+    // Extract company slug from URL for the actor input
+    let companySlug = url;
+    try {
+      const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const companyIdx = parts.indexOf('company');
+      if (companyIdx !== -1 && parts[companyIdx + 1]) {
+        companySlug = parts[companyIdx + 1];
+      }
+    } catch (e) {}
+
+    const items = await runActorSync('apimaestro~linkedin-company-posts', {
       urls: [url],
-      deepScrape: false,
     });
 
     if (!items || items.length === 0) {
       throw new Error('No LinkedIn company data returned');
     }
 
-    const company = items[0];
-
-    // Extract posts if available
-    const posts = (company.posts || company.updates || company.recentUpdates || []).map(post => ({
-      text: post.text || post.commentary || post.content || '',
-      date: post.postedAt || post.date || post.timestamp || '',
+    // apimaestro/linkedin-company-posts returns an array of post objects
+    // Each post has: text/commentary, reactions/likes, comments, shares, date, url, media, etc.
+    const posts = items.map(post => ({
+      text: post.text || post.commentary || post.content || post.postText || '',
+      date: post.postedAt || post.postedDate || post.date || post.timestamp || '',
       url: post.url || post.postUrl || post.permalink || null,
-      likes: post.likes || post.numLikes || 0,
-      comments: post.comments || post.numComments || 0,
+      likes: post.totalReactionCount || post.likes || post.numLikes || post.reactions || 0,
+      comments: post.commentsCount || post.comments || post.numComments || 0,
+      shares: post.repostsCount || post.shares || post.numShares || 0,
     }));
+
+    // Derive company name from the slug since the actor doesn't return profile metadata
+    const companyName = companySlug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
 
     return {
       data: {
         data: {
-          name: company.name || company.companyName || '',
-          followerCount: company.followersCount || company.followerCount || company.followers || 0,
-          follower_count: company.followersCount || company.followerCount || company.followers || 0,
-          employeeCount: company.employeesCount || company.employeeCount || company.staffCount || 0,
-          employee_count: company.employeesCount || company.employeeCount || company.staffCount || 0,
-          industry: company.industry || company.industries?.[0] || '',
-          specialties: company.specialties || company.specialities || [],
-          description: company.description || '',
-          website: company.website || '',
+          name: companyName,
+          followerCount: 0, // Not available without cookies
+          follower_count: 0,
+          employeeCount: 0, // Not available without cookies
+          employee_count: 0,
+          industry: '',
+          specialties: [],
+          description: '',
+          website: '',
           posts: posts,
         }
       }

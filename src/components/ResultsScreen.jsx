@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { generatePDF } from '../utils/pdfExport';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, Cell } from 'recharts';
 
 function OverviewTab({ brandMetrics }) {
