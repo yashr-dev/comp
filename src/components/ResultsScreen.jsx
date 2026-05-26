@@ -409,6 +409,21 @@ function ReportTab({ analysisText }) {
   return (
     <div id="report-container" className="ai-report fade-in" style={{ padding: '40px', background: '#f8fafc', borderRadius: 12 }}>
       
+      {/* STRATEGIC REASONING (Chain of Thought) */}
+      {data.strategicReasoning && data.strategicReasoning.length > 0 && (
+        <div style={{ marginBottom: 40, padding: 24, background: '#ffffff', borderRadius: 8, borderLeft: '4px solid #8b5cf6', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+            Strategic Insights & Reasoning
+          </h3>
+          <ul style={{ margin: 0, paddingLeft: 20, color: '#374151', fontSize: 14, lineHeight: 1.6 }}>
+            {data.strategicReasoning.map((step, i) => (
+              <li key={i} style={{ marginBottom: 8 }}>{step}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* BRAND POSITIONING MATRIX */}
       <div style={{ marginBottom: 60, pageBreakInside: 'avoid' }}>
         <table style={tableStyles}>

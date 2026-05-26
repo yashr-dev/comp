@@ -58,8 +58,16 @@ const ANALYSIS_REQUEST = `## ANALYSIS REQUIRED
 You are an expert digital marketing strategist at DigiChefs. 
 You must generate a competitive audit presentation formatted STRICTLY as a JSON object. Do NOT use markdown blocks.
 
+CRITICAL INSTRUCTION: You must think step-by-step BEFORE generating the final positioning data. Use the "strategicReasoning" array to write down your analytical thought process. Compare engagement rates, look at top performing post formats, identify the brand voice, and find strategic gaps. ONLY AFTER thinking through this should you fill out the rest of the JSON.
+
 The JSON MUST match this exact schema:
 {
+  "strategicReasoning": [
+    "Step 1: Analyze Engagement - Who has the highest ER? Why? Look at their Like-to-Comment ratios.",
+    "Step 2: Content Formats - Who is relying on video/Reels vs static? What formats drive the most engagement?",
+    "Step 3: Brand Voice & Themes - What is the overarching message of each brand based on their captions?",
+    "Step 4: Strategic Whitespace - What are the competitors missing that the client could capitalize on?"
+  ],
   "brandPositioning": [
     {
       "brand": "Competitor Name",
