@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { generatePPT } from '../utils/pptExport';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, Cell } from 'recharts';
 
 function OverviewTab({ brandMetrics }) {
@@ -475,11 +476,15 @@ export default function ResultsScreen({ brandMetrics, analysisText, config, onRe
   if (config.platforms.facebook) platformsList.push('Facebook');
   if (config.platforms.linkedin) platformsList.push('LinkedIn');
 
-  const handleExportPDF = () => {
-    // We use the browser's native print engine to generate a flawless PDF.
-    // The @media print CSS rules will automatically hide the interactive UI
-    // and expand the hidden print-only container.
-    window.print();
+  const handleExportPPT = async () => {
+    let data = null;
+    try {
+      const cleanJson = analysisText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      data = JSON.parse(cleanJson);
+    } catch (e) {
+      // If AI hasn't generated valid JSON yet
+    }
+    await generatePPT(brandMetrics, data, config.clientName);
   };
 
   const tabs = [
@@ -510,8 +515,8 @@ export default function ResultsScreen({ brandMetrics, analysisText, config, onRe
         {activeTab === 'report' && <ReportTab analysisText={analysisText} />}
 
         <div className="export-bar">
-          <button className="btn btn-primary btn-lg" onClick={handleExportPDF}>
-            📄 Export PDF Report
+          <button className="btn btn-primary btn-lg" onClick={handleExportPPT}>
+            📊 Download PPT Presentation
           </button>
           <button className="btn btn-secondary" onClick={onReset}>
             🔄 New Audit
@@ -519,27 +524,7 @@ export default function ResultsScreen({ brandMetrics, analysisText, config, onRe
         </div>
       </div>
 
-      {/* ── FULL PDF EXPORT LAYOUT (Visible only during PDF export) ── */}
-      <div className="print-only">
-        <div style={{ textAlign: 'center', marginBottom: 40, paddingBottom: 20, borderBottom: '1px solid #e5e7eb' }}>
-          <h1 style={{ fontSize: 36, fontWeight: 800, color: '#111827', margin: '0 0 12px 0' }}>Competitive Social Media Audit</h1>
-          <p style={{ fontSize: 20, color: '#ea580c', margin: 0 }}>{config.clientName} | {config.industry}</p>
-        </div>
-        
-        <OverviewTab brandMetrics={brandMetrics} />
-        
-        <div style={{ pageBreakBefore: 'always', paddingTop: 40 }} />
-        <div style={{ padding: '0 0 16px 0', borderBottom: '2px solid #ea580c', marginBottom: 32 }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: 0 }}>Content Analysis</h2>
-        </div>
-        <ContentTab brandMetrics={brandMetrics} />
-        
-        <div style={{ pageBreakBefore: 'always', paddingTop: 40 }} />
-        <div style={{ padding: '0 0 16px 0', borderBottom: '2px solid #ea580c', marginBottom: 32 }}>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: 0 }}>Strategic Presentation Matrices</h2>
-        </div>
-        <ReportTab analysisText={analysisText} />
-      </div>
+      {/* ── FULL PDF EXPORT LAYOUT HAS BEEN REPLACED BY PPT EXPORT ── */}
 
     </div>
   );
