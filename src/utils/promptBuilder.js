@@ -26,11 +26,24 @@ function fmtFB(fb, name) {
 
 function fmtLI(li, name) {
   if (!li) return `LinkedIn: Data not available for ${name}\n`;
-  let s = `LinkedIn:\n- Company Name: ${li.companyName}\n- Followers: ${li.followers.toLocaleString()}\n- Employee Count: ${li.employeeCount.toLocaleString()}\n- Industry: ${li.industry}\n- Specialties: ${li.specialties}\n`;
-  if (li.recentPosts.length > 0) {
+  let s = `LinkedIn:\n- Company Name: ${li.companyName}\n`;
+  s += li.followers > 0 ? `- Followers: ${li.followers.toLocaleString()}\n` : `- Followers: Not available via API (cookie-free scraping)\n`;
+  s += li.employeeCount > 0 ? `- Employee Count: ${li.employeeCount.toLocaleString()}\n` : '';
+  if (li.industry) s += `- Industry: ${li.industry}\n`;
+  if (li.specialties) s += `- Specialties: ${li.specialties}\n`;
+  s += `- Posts Analyzed: ${li.postsAnalyzed}\n`;
+  if (li.hasPostData) {
+    s += `- Avg Likes/Post: ${li.avgLikes}\n- Avg Comments/Post: ${li.avgComments}\n- Avg Shares/Post: ${li.avgShares}\n`;
+  }
+  if (li.topPosts && li.topPosts.length > 0) {
+    s += `- Top 3 Posts (by engagement):\n`;
+    li.topPosts.forEach((p, i) => {
+      s += `  ${i+1}. Text: "${p.text}" | Likes: ${p.likes} | Comments: ${p.comments} | Shares: ${p.shares}\n`;
+    });
+  } else if (li.recentPosts && li.recentPosts.length > 0) {
     s += `- Recent Posts (${li.postsAnalyzed} posts):\n`;
     li.recentPosts.forEach((p, i) => {
-      s += `  ${i+1}. Date: ${p.date} | Text: "${p.text}"\n`;
+      s += `  ${i+1}. Date: ${p.date} | Likes: ${p.likes || 0} | Comments: ${p.comments || 0} | Text: "${p.text}"\n`;
     });
   }
   return s;

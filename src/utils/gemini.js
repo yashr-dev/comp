@@ -8,6 +8,9 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 import { SYSTEM_KNOWLEDGE_BASE } from './knowledgeBase';
 
 export async function runGeminiAnalysis(userPrompt, onProgress) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('VITE_GEMINI_API_KEY is not set — check your .env file');
+  }
   onProgress?.('Sending data to Gemini 3.1 Pro Preview for strategic analysis...');
   
   const requestBody = {

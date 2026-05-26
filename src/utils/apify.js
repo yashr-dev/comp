@@ -6,6 +6,7 @@
 //   LinkedIn:  apimaestro/linkedin-company-posts (company posts, no cookies needed)
 
 const APIFY_TOKEN = import.meta.env.VITE_APIFY_TOKEN;
+if (!APIFY_TOKEN) console.error('⚠️ VITE_APIFY_TOKEN is not set — all Apify calls will fail. Check your .env file.');
 const APIFY_BASE = '/api/apify/v2';
 
 // ─── CORE API HELPERS ────────────────────────────────────────
@@ -106,14 +107,14 @@ function sleep(ms) {
 
 function extractHandle(input) {
   if (!input) return '';
-  let handle = input.replace(/^@/, '');
+  let handle = input.trim().replace(/^@/, '').trim();
   try {
     if (handle.includes('instagram.com/')) {
       const url = new URL(handle.startsWith('http') ? handle : `https://${handle}`);
       handle = url.pathname.split('/').filter(Boolean)[0];
     }
   } catch(e) {}
-  return handle || input;
+  return handle || '';
 }
 
 // ─── INSTAGRAM ──────────────────────────────────────────────
@@ -242,13 +243,15 @@ export async function fetchFacebookPosts(url) {
     }
 
     // Normalize posts to match the format metrics.js expects
+    // Note: post.comments can be an array of objects (not a number) from some Apify actors
+    const safeCount = (val) => typeof val === 'number' ? val : (Array.isArray(val) ? val.length : 0);
     const normalizedPosts = items.map(post => ({
-      likes: post.likes || post.likesCount || post.reactions || 0,
-      like_count: post.likes || post.likesCount || post.reactions || 0,
-      comments: post.comments || post.commentsCount || 0,
-      comment_count: post.comments || post.commentsCount || 0,
-      shares: post.shares || post.sharesCount || 0,
-      share_count: post.shares || post.sharesCount || 0,
+      likes: safeCount(post.likes) || safeCount(post.likesCount) || safeCount(post.reactions) || 0,
+      like_count: safeCount(post.likes) || safeCount(post.likesCount) || safeCount(post.reactions) || 0,
+      comments: safeCount(post.comments) || safeCount(post.commentsCount) || 0,
+      comment_count: safeCount(post.comments) || safeCount(post.commentsCount) || 0,
+      shares: safeCount(post.shares) || safeCount(post.sharesCount) || 0,
+      share_count: safeCount(post.shares) || safeCount(post.sharesCount) || 0,
       text: post.text || post.message || post.postText || '',
       message: post.text || post.message || post.postText || '',
       caption: post.text || post.message || post.postText || '',
@@ -296,13 +299,14 @@ export async function fetchLinkedInCompany(url) {
 
     // apimaestro/linkedin-company-posts returns an array of post objects
     // Each post has: text/commentary, reactions/likes, comments, shares, date, url, media, etc.
+    const safeCount = (val) => typeof val === 'number' ? val : (Array.isArray(val) ? val.length : 0);
     const posts = items.map(post => ({
       text: post.text || post.commentary || post.content || post.postText || '',
       date: post.postedAt || post.postedDate || post.date || post.timestamp || '',
       url: post.url || post.postUrl || post.permalink || null,
-      likes: post.totalReactionCount || post.likes || post.numLikes || post.reactions || 0,
-      comments: post.commentsCount || post.comments || post.numComments || 0,
-      shares: post.repostsCount || post.shares || post.numShares || 0,
+      likes: safeCount(post.totalReactionCount) || safeCount(post.likes) || safeCount(post.numLikes) || safeCount(post.reactions) || 0,
+      comments: safeCount(post.commentsCount) || safeCount(post.comments) || safeCount(post.numComments) || 0,
+      shares: safeCount(post.repostsCount) || safeCount(post.shares) || safeCount(post.numShares) || 0,
     }));
 
     // Derive company name from the slug since the actor doesn't return profile metadata

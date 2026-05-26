@@ -4,6 +4,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTo
 function OverviewTab({ brandMetrics }) {
   const igBrands = brandMetrics.filter(b => b.instagram);
   const fbBrands = brandMetrics.filter(b => b.facebook);
+  const liBrands = brandMetrics.filter(b => b.linkedin);
 
   const chartData = igBrands.map((b, i) => ({
     name: b.name,
@@ -182,6 +183,44 @@ function OverviewTab({ brandMetrics }) {
           </table>
         </>
       )}
+      {liBrands.length > 0 && (
+        <>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: '24px 0 12px', color: 'var(--cyan-500, #06b6d4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            LinkedIn Comparison
+          </h3>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Posts Analyzed</th>
+                <th>Avg Likes</th>
+                <th>Avg Comments</th>
+                <th>Avg Shares</th>
+              </tr>
+            </thead>
+            <tbody>
+              {liBrands.map((b, i) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: 600 }}>{b.name}</td>
+                  {b.linkedin.hasPostData ? (
+                    <>
+                      <td>{b.linkedin.postsAnalyzed}</td>
+                      <td>{b.linkedin.avgLikes?.toLocaleString()}</td>
+                      <td>{b.linkedin.avgComments}</td>
+                      <td>{b.linkedin.avgShares}</td>
+                    </>
+                  ) : (
+                    <td colSpan="4" style={{ color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>
+                      Posts unavailable
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }
@@ -203,10 +242,15 @@ function ContentTab({ brandMetrics }) {
                 View Post ↗
               </a>
             )}
-            <div className="post-format">{platform === 'linkedin' ? 'Text/Doc' : post.format}</div>
+            <div className="post-format">{platform === 'linkedin' ? 'Post' : post.format}</div>
             <div className="post-meta">
               {platform === 'linkedin' ? (
-                <div className="stat">📅 {post.date}</div>
+                <>
+                  {post.likes !== undefined && <div className="stat">❤️ {(post.likes || 0).toLocaleString()}</div>}
+                  {post.comments !== undefined && <div className="stat">💬 {(post.comments || 0).toLocaleString()}</div>}
+                  {post.shares !== undefined && <div className="stat">🔁 {(post.shares || 0).toLocaleString()}</div>}
+                  {post.date && <div className="stat">📅 {post.date}</div>}
+                </>
               ) : (
                 <>
                   <div className="stat">❤️ {post.likes?.toLocaleString()}</div>

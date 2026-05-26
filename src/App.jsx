@@ -79,10 +79,10 @@ export default function App() {
       const metricsData = rawData.map(brand => {
         const result = { name: brand.name };
         
-        if (brand.instagramProfile || brand.instagramPosts) {
+        if (brand.instagramProfile && brand.instagramPosts) {
           result.instagram = calculateInstagramMetrics(brand.instagramProfile, brand.instagramPosts);
         }
-        if (brand.facebookProfile || brand.facebookPosts) {
+        if (brand.facebookProfile && brand.facebookPosts) {
           result.facebook = calculateFacebookMetrics(brand.facebookProfile, brand.facebookPosts);
         }
         if (brand.linkedinCompany) {

@@ -278,11 +278,49 @@ export function calculateLinkedInMetrics(companyData) {
     postsList = Object.values(postsArray).filter(item => typeof item === 'object');
   }
   
-  const recentPosts = postsList.slice(0, 10).map(post => ({
-    date: post.date || post.posted_at || post.timestamp || '',
-    text: (post.text || post.commentary || post.content || '').substring(0, 200),
-    url: post.url || post.post_url || post.link || post.permalink || null
+  // Calculate engagement metrics from posts
+  let totalLikes = 0;
+  let totalComments = 0;
+  let totalShares = 0;
+  
+  const enrichedPosts = postsList.map(post => {
+    const likes = post.likes || post.numLikes || 0;
+    const comments = post.comments || post.numComments || 0;
+    const shares = post.shares || post.numShares || 0;
+    const text = (post.text || post.commentary || post.content || '').substring(0, 200);
+    
+    totalLikes += likes;
+    totalComments += comments;
+    totalShares += shares;
+    
+    return {
+      date: post.date || post.posted_at || post.timestamp || '',
+      text,
+      url: post.url || post.post_url || post.link || post.permalink || null,
+      likes,
+      comments,
+      shares,
+      engagement: likes + comments + shares,
+    };
+  });
+  
+  const postCount = postsList.length || 1; // avoid division by zero
+  const avgLikes = Math.round(totalLikes / postCount);
+  const avgComments = Math.round((totalComments / postCount) * 10) / 10;
+  const avgShares = Math.round((totalShares / postCount) * 10) / 10;
+  
+  // Sort posts by engagement for top/worst
+  const sorted = [...enrichedPosts].sort((a, b) => b.engagement - a.engagement);
+  const topPosts = sorted.slice(0, 3).map(p => ({
+    text: p.text,
+    likes: p.likes,
+    comments: p.comments,
+    shares: p.shares,
+    date: p.date,
+    url: p.url,
   }));
+  
+  const recentPosts = enrichedPosts.slice(0, 10);
   
   return {
     companyName,
@@ -291,7 +329,12 @@ export function calculateLinkedInMetrics(companyData) {
     industry,
     specialties: Array.isArray(specialties) ? specialties.join(', ') : specialties,
     recentPosts,
-    postsAnalyzed: recentPosts.length,
+    topPosts,
+    postsAnalyzed: postsList.length,
+    avgLikes,
+    avgComments,
+    avgShares,
+    hasPostData: postsList.length > 0,
   };
 }
 
